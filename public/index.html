@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>仙人Tube</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1a1a1a">
+<style>
+  body { margin:0; font-family:sans-serif; background:#111; color:#fff; display:flex; flex-direction:column; align-items:center; min-height:100vh; }
+  header { padding:1rem; text-align:center; }
+  input { padding:.5rem; width:250px; margin-right:.5rem; }
+  button { padding:.5rem 1rem; margin-right:.5rem; }
+  #search-results { display:flex; flex-wrap:wrap; justify-content:center; margin-top:1rem; gap:1rem; }
+  .thumb { width:160px; cursor:pointer; transition:.2s; border-radius:6px; }
+  .thumb:hover { transform:scale(1.05); }
+  iframe { margin-top:1rem; width:80vw; height:45vw; max-width:1280px; max-height:720px; border:none; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,.5); transition:.3s; }
+</style>
+</head>
+<body>
+<header>
+  <h1>仙人Tube</h1>
+  <div>
+    <input type="text" id="query" placeholder="キーワード検索">
+    <button onclick="searchVideos()">検索</button>
+    <label><input type="checkbox" id="nocookie"> nocookie再生</label>
+  </div>
+</header>
+
+<div id="search-results"></div>
+<iframe id="player" src="" allow="autoplay; encrypted-media"></iframe>
+
+<script>
+async function searchVideos() {
+  const q = document.getElementById('query').value.trim();
+  if (!q) return alert("検索ワードを入力してください");
+
+  const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+  const data = await res.json();
+  const results = document.getElementById('search-results');
+  results.innerHTML = "";
+
+  data.items.forEach(id => {
+    const img = document.createElement('img');
+    img.src = `https://i.ytimg.com/vi/${id}/mqdefault.jpg`;
+    img.className = "thumb";
+    img.onclick = () => loadVideo(id);
+    results.appendChild(img);
+  });
+}
+
+async function loadVideo(id) {
+  const nocookie = document.getElementById('nocookie').checked ? 1 : 0;
+  const res = await fetch(`/api/video/${id}?nocookie=${nocookie}`);
+  const data = await res.json();
+  document.getElementById('player').src = data.embedUrl;
+}
+</script>
+</body>
+</html>
